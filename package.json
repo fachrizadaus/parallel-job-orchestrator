@@ -7,8 +7,8 @@
     "start": "ts-node src/index.ts",
     "demo:public-ip": "ts-node src/index.ts --publicIp=true",
     "demo:no-public-ip": "ts-node src/index.ts --publicIp=false",
-    "demo:fail": "ts-node src/index.ts --publicIp=true --failAt=attachAcl",
-    "demo:timeout": "npx ts-node src/index.ts --publicIp=false --timeoutAt=attachAcl"
+    "demo:fail": "ts-node src/index.ts --publicIp=true --failAt=deployVm",
+    "demo:timeout": "npx ts-node src/index.ts --publicIp=false --timeoutAt=deployVm"
   },
   "devDependencies": {
     "ts-node": "~10.9.2",
