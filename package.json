@@ -1,0 +1,18 @@
+{
+  "name": "wowdev-vm-orchestrator",
+  "version": "1.0.0",
+  "description": "WowDev Contest - VM deployment orchestrator (VPC + network + VM + optional public IP)",
+  "main": "src/index.ts",
+  "scripts": {
+    "start": "ts-node src/index.ts",
+    "demo:public-ip": "ts-node src/index.ts --publicIp=true",
+    "demo:no-public-ip": "ts-node src/index.ts --publicIp=false",
+    "demo:fail": "ts-node src/index.ts --publicIp=true --failAt=attachAcl",
+    "demo:timeout": "npx ts-node src/index.ts --publicIp=false --timeoutAt=attachAcl"
+  },
+  "devDependencies": {
+    "ts-node": "~10.9.2",
+    "typescript": "~6.0.3",
+    "@types/node": "^22.5.0"
+  }
+}
