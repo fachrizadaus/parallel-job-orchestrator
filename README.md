@@ -10,7 +10,7 @@ This project turns CloudStack VM deployment pipeline into a single CLI run: it m
 - **Local IP-claim locking** to close a check-then-act race between `listPublicIpAddresses` and `enableStaticNat`.
 - **No cron, no HTTP client library, no database** — native `fetch`, dependency-driven dispatch, an in-memory undo stack.
 
-## Resources
+## Documentation on how this app works
 - [docs/end-to-end-recap.md](docs/end-to-end-recap.md) for how the code executes, the job table, and repo layout
 - [docs/retry-and-rollback.md](docs/retry-and-rollback.md) for retry/backoff/rollback details (including the jitter strategy)
 - [docs/local-ip-locking.md](docs/local-ip-locking.md) for the IP-claim lock.
