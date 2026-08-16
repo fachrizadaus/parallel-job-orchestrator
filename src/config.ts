@@ -35,11 +35,6 @@ export const BACKOFF_JITTER_MS = Number(process.env.BACKOFF_JITTER_MS ?? 300);
 // Logs every API request/response to a per-run file under logs/ when enabled.
 export const CREATE_LOG = process.env.CREATE_LOG === "true";
 
-// -- Deployment: values needed to deploy a VM --
-export const SERVICE_OFFERING_ID = process.env.SERVICE_OFFERING_ID ?? "testserviceoffering";
-export const TEMPLATE_ID = process.env.TEMPLATE_ID ?? "testtemplate";
-export const SUBNET_GATEWAY = process.env.SUBNET_GATEWAY ?? "10.0.1.1";
-export const SUBNET_NETMASK = process.env.SUBNET_NETMASK ?? "255.255.255.0";
-export const ACL_RULE_PROTOCOL = process.env.ACL_RULE_PROTOCOL ?? "all";
-export const ACL_RULE_CIDR = process.env.ACL_RULE_CIDR ?? "0.0.0.0/0";
-export const ACL_RULE_ACTION = process.env.ACL_RULE_ACTION ?? "Allow";
+// Values sent as API params that don't have a real per-environment meaning yet
+// (service offering, template, subnet gateway/netmask, ACL rules) live in
+// src/demo/fixtures.ts, not here - see that file for why.

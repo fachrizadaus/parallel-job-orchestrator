@@ -1,15 +1,21 @@
 /**
  * scheduler/retry.ts
  *
- * How to reliably call one CloudStack command: 
+ * How to reliably call one CloudStack command:
  * - retry on timeout with exponential backoff
  * - for async commands, poll until a real answer comes back.
+ *
+ * Owns every callApi() call in the run - jobs never call callApi() directly,
+ * they just hand this their command name and params once. That's what keeps
+ * jobs free of any retry/demo-interception concerns of their own.
  */
 
 import { callApi, JobResultResponse } from "../api";
 import { ApiTimeoutError, ApiJobFailedError, ApiCancelledError } from "../errors";
 import { DEFAULT_MAX_RETRIES, DEFAULT_POLL_INTERVAL_MS, BACKOFF_BASE_MS, BACKOFF_CAP_MS, BACKOFF_JITTER_MS } from "../config";
 import { JobHooks } from "./types";
+
+type Params = Record<string, string | number | boolean>;
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -54,13 +60,13 @@ function backoffDelay(attempt: number): number {
  * `hooks` reports each attempt (to the live board, or console.warn if there's none - e.g. during rollback), and lets a failure anywhere else 
  * in the run cancel this one early while it's idle between attempts.
  */
-async function withRetry<T>(commandName: string, attempt: () => Promise<T>, hooks: JobHooks, maxRetries: number): Promise<T> {
+async function withRetry<T>(commandName: string, attempt: (n: number) => Promise<T>, hooks: JobHooks, maxRetries: number): Promise<T> {
   const totalAttempts = maxRetries + 1;
 
   for (let n = 0; n <= maxRetries; n++) {
     try {
       hooks.onAttempt({ attempt: n + 1, totalAttempts });
-      return await attempt();
+      return await attempt(n + 1);
     } catch (err) {
       if (!(err instanceof ApiTimeoutError) || n === maxRetries) throw err;
 
@@ -121,8 +127,8 @@ export async function pollJob(commandName: string, jobid: string, hooks: JobHook
 /**
  * Call a sync CloudStack command (answer comes back immediately, no jobid/polling), retried on timeout. 
  */
-export function runSyncJob<T>(commandName: string, call: () => Promise<T>, hooks: JobHooks, maxRetries = DEFAULT_MAX_RETRIES): Promise<T> {
-  return withRetry(commandName, call, hooks, maxRetries);
+export function runSyncJob<T>(jobId: string, command: string, params: Params, hooks: JobHooks, maxRetries = DEFAULT_MAX_RETRIES): Promise<T> {
+  return withRetry(command, (attempt) => callApi<T>(command, params, { jobId, attempt }), hooks, maxRetries);
 }
 
 /**
@@ -130,11 +136,12 @@ export function runSyncJob<T>(commandName: string, call: () => Promise<T>, hooks
  * Both the start call and the polling that follows retry on timeout (see pollJob above).
  */
 export async function runAsyncJob<T extends { jobid: string }>(
-  commandName: string,
-  startCall: () => Promise<T>,
+  jobId: string,
+  command: string,
+  params: Params,
   hooks: JobHooks,
   maxRetries = DEFAULT_MAX_RETRIES
 ): Promise<JobResultResponse> {
-  const { jobid } = await withRetry(commandName, startCall, hooks, maxRetries);
-  return pollJob(commandName, jobid, hooks, maxRetries);
+  const { jobid } = await withRetry(command, (attempt) => callApi<T>(command, params, { jobId, attempt }), hooks, maxRetries);
+  return pollJob(command, jobid, hooks, maxRetries);
 }

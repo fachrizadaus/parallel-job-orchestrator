@@ -28,30 +28,25 @@ cp .env.example .env
 
 Then set `BASE_URL` in `.env` to the fake CloudStack endpoint. The app will fail with a clear error if it's missing.
 
-Everything else in `.env` is optional — request timeouts, retry/backoff tuning, and the deployment parameters (service offering, template, subnet gateway/netmask, ACL rule defaults) all have built-in fallbacks; see [`.env.example`](.env.example) for the full list.
+Everything else in `.env` is optional — request timeouts and retry/backoff tuning have built-in fallbacks; see [`.env.example`](.env.example) for the full list. `.env` only holds settings for *this app* (endpoint, timeouts, retries) 
 
 Set `CREATE_LOG=true` to log every API request/response to a per-run file under `logs/`. Off by default.
 
-## Running the demo
-```bash
-npm run demo:public-ip      # happy path, publicIp=true
-npm run demo:no-public-ip   # happy path, publicIp=false
-npm run demo:fail           # forces deployVm to hard-fail -> triggers rollback
-npm run demo:timeout        # forces deployVm to time out  -> retry/backoff, then rollback
-```
-
-Or run directly with `npx ts-node` to control every flag:
+## Running a demo scenario
+This is how to run this project.
 
 ```bash
-npx ts-node src/index.ts --publicIp=true
-npx ts-node src/index.ts --publicIp=true --failAt=deployVm
-npx ts-node src/index.ts --publicIp=true --timeoutAt=aclList
+npm run demo:list             # see every available scenario and what it does
+npm run demo:run -- <name>    # run one, e.g.: success-with-public-ip
 ```
 
-| flag | value | meaning |
-| --- | --- | --- |
-| `--publicIp` | `true`\|`false` | include the public IP branch (default: `true`) |
-| `--failAt` | `<jobId>` | simulate `jobstatus=2`, a real failure. **Not** retried — rolls back immediately |
-| `--timeoutAt` | `<jobId>` | simulate a request timeout. Retried with exponential backoff, then rolls back |
-
-Valid job ids for `--failAt` / `--timeoutAt`: `vpc`, `subnet`, `aclList`, `aclRule`, `attachAcl`, `deployVm`, `publicIp`, `staticNat`.
+### Provided Scenario to Run
+| scenario | what it shows |
+| --- | --- |
+| `success-without-public-ip` | Happy path, no public IP branch. **(contest case: `public_ip=false`)** |
+| `success-with-public-ip` | Happy path, including static NAT on a public IP. **(contest case: `public_ip=true`)** |
+| `success-multi-acl-rule-fanout` | Multiple ACL rules created in parallel from one `aclList`. |
+| `success-deployvm-outpaces-acl-branch` | `aclList` is deliberately slowed; `deployVm` finishes well before it - proves jobs dispatch independently, not in fixed waves. |
+| `success-deployvm-recovers-from-timeout` | `deployVm` times out twice, then succeeds on the third attempt - retry/backoff recovering mid-run. |
+| `rolled-back-after-deploy-vm-failure` | `deployVm` rejected outright (`jobstatus=2`) - the most comprehensive rollback demo. **(contest case: a job failed)** |
+| `rolled-back-after-deploy-vm-timeout` | `deployVm` times out on every attempt, exhausting retries before rolling back. **(contest case: a job failed)** |

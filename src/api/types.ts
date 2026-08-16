@@ -46,6 +46,13 @@ export interface CreateNetworkACLParams {
   [k: string]: any;
 }
 
+export interface AclRuleConfig {
+  protocol: string;
+  cidr: string;
+  action: string;
+  [k: string]: any; // e.g. startport/endport
+}
+
 export interface ReplaceNetworkACLListParams {
   aclid: string;
   networkid: string;

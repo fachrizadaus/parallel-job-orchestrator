@@ -1,29 +1,26 @@
-import { callApi } from "../api";
 import { CreateNetworkParams, CreateNetworkResponse, DeleteNetworkParams, JobIdResponse } from "../api/types";
 import { runAsyncJob, runSyncJob, JobDefinition } from "../scheduler";
-import { WithDemoParams } from "./index";
-import { SUBNET_GATEWAY, SUBNET_NETMASK } from "../config";
 
-export function subnetJob(deploymentName: string, withDemoParams: WithDemoParams): JobDefinition {
+export function subnetJob(deploymentName: string, gateway: string, netmask: string): JobDefinition {
   return {
     id: "subnet",
     label: "subnet (createNetwork)",
     dependsOn: ["vpc"],
     run: async (hooks, ctx) => {
-      const params = withDemoParams<CreateNetworkParams>("subnet", {
+      const params: CreateNetworkParams = {
         vpcid: ctx.resources.vpc,
         name: `${deploymentName}-subnet`,
-        gateway: SUBNET_GATEWAY,
-        netmask: SUBNET_NETMASK,
-      });
+        gateway,
+        netmask,
+      };
 
-      const result = await runSyncJob("createNetwork", () => callApi<CreateNetworkResponse>("createNetwork", params), hooks);
+      const result = await runSyncJob<CreateNetworkResponse>("subnet", "createNetwork", params, hooks);
       return result.network.id;
     },
     rollback: async (subnetId, hooks) => {
       // Required - deleteVpc refuses while any network is still attached.
       const params: DeleteNetworkParams = { id: subnetId };
-      await runAsyncJob("deleteNetwork", () => callApi<JobIdResponse>("deleteNetwork", params), hooks);
+      await runAsyncJob<JobIdResponse>("subnet", "deleteNetwork", params, hooks);
     },
   };
 }

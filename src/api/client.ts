@@ -20,11 +20,32 @@ function isErrorShape(unwrapped: any): boolean {
   return unwrapped && typeof unwrapped === "object" && ("errorcode" in unwrapped || "errortext" in unwrapped);
 }
 
+/**
+ * registering hook that can rewrite outgoing params before a request is sent. 
+ */
+export type RequestInterceptor = (ctx: {
+  jobId?: string;
+  attempt?: number;
+  command: string;
+  params: Record<string, string | number | boolean>
+}) => Record<string, string | number | boolean>;
+
+
+let interceptor: RequestInterceptor | undefined;
+export function setRequestInterceptor(fn: RequestInterceptor | undefined): void {
+  interceptor = fn;
+}
+
 // Calls the API and unwraps the `<command>response` envelope.
+// `meta` (jobId/attempt) is only used to look up for active interceptor, if any - see setRequestInterceptor above.
 export async function callApi<T = any>(
   command: string,
-  params: Record<string, string | number | boolean> = {}
+  params: Record<string, string | number | boolean> = {},
+  meta?: { jobId?: string; attempt?: number }
 ): Promise<T> {
+  // If an interceptor is registered, then rewrite the params before sending the request.
+  if (interceptor) params = interceptor({ ...meta, command, params });
+
   const query = new URLSearchParams({ command, response: "json", ...toStringRecord(params) });
   const url = `${BASE_URL}?${query.toString()}`;
   logLine(`-> ${url}`);

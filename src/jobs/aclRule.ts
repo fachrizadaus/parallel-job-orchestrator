@@ -1,25 +1,31 @@
-import { callApi } from "../api";
-import { CreateNetworkACLParams, JobIdResponse } from "../api/types";
+import { CreateNetworkACLParams, AclRuleConfig, JobIdResponse } from "../api/types";
 import { runAsyncJob, JobDefinition } from "../scheduler";
-import { WithDemoParams } from "./index";
-import { ACL_RULE_PROTOCOL, ACL_RULE_CIDR, ACL_RULE_ACTION } from "../config";
 
-export function aclRuleJob(withDemoParams: WithDemoParams): JobDefinition {
+function aclRuleJob(id: string, rule: AclRuleConfig): JobDefinition {
+  const { protocol, cidr, action, ...extra } = rule;
+
   return {
-    id: "aclRule",
-    label: "aclRule (createNetworkACL)",
+    id,
+    label: `${id} (createNetworkACL)`,
     dependsOn: ["aclList"],
     run: async (hooks, ctx) => {
-      const params = withDemoParams<CreateNetworkACLParams>("aclRule", {
+      const params: CreateNetworkACLParams = {
         aclid: ctx.resources.aclList,
-        protocol: ACL_RULE_PROTOCOL,
-        cidrlist: ACL_RULE_CIDR,
-        action: ACL_RULE_ACTION,
-      });
+        protocol,
+        cidrlist: cidr,
+        action,
+        ...extra,
+      };
 
-      const result = await runAsyncJob("createNetworkACL", () => callApi<JobIdResponse>("createNetworkACL", params), hooks);
-      ctx.cloudJobIds.aclRule = result.jobid;
+      const result = await runAsyncJob<JobIdResponse>(id, "createNetworkACL", params, hooks);
+      ctx.cloudJobIds[id] = result.jobid;
       return result.jobresult.networkacl?.id ?? "";
     },
   };
+}
+
+// One job per rule in `rules`, ids aclRule1..aclRuleN. All depend only on
+// aclList, so the scheduler runs them in parallel.
+export function buildAclRuleJobs(rules: AclRuleConfig[]): JobDefinition[] {
+  return rules.map((rule, i) => aclRuleJob(`aclRule${i + 1}`, rule));
 }
