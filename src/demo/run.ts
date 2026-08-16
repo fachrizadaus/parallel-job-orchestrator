@@ -10,7 +10,7 @@ import { buildJobs } from "../jobs";
 import { runAndReport } from "../runAndReport";
 import { activateScenario } from "./index";
 import { SCENARIOS } from "./scenarios";
-import { VPC_CIDR, SERVICE_OFFERING_ID, TEMPLATE_ID, SUBNET_GATEWAY, SUBNET_NETMASK, ACL_RULES } from "./fixtures";
+import { VPC_CIDR, SERVICE_OFFERING_ID, TEMPLATE_ID, SUBNET_GATEWAY, SUBNET_NETMASK, ACL_RULESET } from "./fixtures";
 
 function listNames(): void {
   console.log("Available scenarios:");
@@ -53,7 +53,9 @@ async function main() {
     templateId: TEMPLATE_ID,
     subnetGateway: SUBNET_GATEWAY,
     subnetNetmask: SUBNET_NETMASK,
-    aclRules: ACL_RULES,
+    // the number of aclRuleset limitation for any scenario based on predefined ACL_RULESET, 
+    // by default it will use all ACL_RULESET
+    aclRules: ACL_RULESET.slice(0, scenario.aclRulesetCount ?? ACL_RULESET.length),
   });
   const ctx: RunContext = { resources: {}, cloudJobIds: {}, publicIp: scenario.publicIp };
 

@@ -9,7 +9,7 @@
 import { RunContext } from "./scheduler";
 import { buildJobs } from "./jobs";
 import { runAndReport } from "./runAndReport";
-import { VPC_CIDR, SERVICE_OFFERING_ID, TEMPLATE_ID, SUBNET_GATEWAY, SUBNET_NETMASK, ACL_RULES } from "./demo/fixtures";
+import { VPC_CIDR, SERVICE_OFFERING_ID, TEMPLATE_ID, SUBNET_GATEWAY, SUBNET_NETMASK, ACL_RULESET } from "./demo/fixtures";
 
 function parseArgs(argv: string[]): { publicIp: boolean } {
   const args = Object.fromEntries(
@@ -32,6 +32,8 @@ async function main() {
   console.log("=".repeat(60));
 
   // Begin the deployment run, which will orchestrate the jobs and handle retries, rollbacks, and logging.
+  // Job builder is currently configured using demo parameters.
+  // if later we want to support a real run with different parameters, we can add more CLI args and pass them here.
   const jobs = buildJobs({
     deploymentName,
     publicIp,
@@ -40,7 +42,7 @@ async function main() {
     templateId: TEMPLATE_ID,
     subnetGateway: SUBNET_GATEWAY,
     subnetNetmask: SUBNET_NETMASK,
-    aclRules: ACL_RULES,
+    aclRules: ACL_RULESET,
   });
   const ctx: RunContext = { resources: {}, cloudJobIds: {}, publicIp };
 

@@ -18,7 +18,7 @@ export const SUBNET_NETMASK = "255.255.255.0";
 // One createNetworkACL call (and one job) per entry, all created in parallel -
 // see src/jobs/aclRule.ts. Three rules (not one) so success-multi-acl-rule-fanout
 // demonstrates actual parallel dispatch, not a trivially single-job "parallel" set.
-export const ACL_RULES: AclRuleConfig[] = [
+export const ACL_RULESET: AclRuleConfig[] = [
   { protocol: "tcp", cidr: "0.0.0.0/0", action: "Allow", startport: "22", endport: "22" },
   { protocol: "tcp", cidr: "0.0.0.0/0", action: "Allow", startport: "80", endport: "80" },
   { protocol: "tcp", cidr: "0.0.0.0/0", action: "Allow", startport: "443", endport: "443" },

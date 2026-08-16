@@ -21,6 +21,8 @@ export interface DemoScenario {
   name: string;
   description: string;
   publicIp: boolean;
+  // How many rules from ACL_RULESET to actually create
+  aclRulesetCount?: number;
   // jobId -> what to do to it. Jobs not listed here run normally.
   simulate?: Record<string, JobSimulation>;
 }
