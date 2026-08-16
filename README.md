@@ -37,16 +37,17 @@ This is how to run this project.
 
 ```bash
 npm run demo:list             # see every available scenario and what it does
-npm run demo:run -- <name>    # run one, e.g.: success-with-public-ip
+npm run demo:run -- <name>    # run one, e.g.: with-public-ip
 ```
 
 ### Provided Scenario to Run
-| scenario | what it shows |
-| --- | --- |
-| `success-without-public-ip` | Happy path, no public IP branch. **(contest case: `public_ip=false`)** |
-| `success-with-public-ip` | Happy path, including static NAT on a public IP. **(contest case: `public_ip=true`)** |
-| `success-multi-acl-rule-fanout` | Multiple ACL rules created in parallel from one `aclList`. |
-| `success-deployvm-outpaces-acl-branch` | `aclList` is deliberately slowed; `deployVm` finishes well before it - proves jobs dispatch independently, not in fixed waves. |
-| `success-deployvm-recovers-from-timeout` | `deployVm` times out twice, then succeeds on the third attempt - retry/backoff recovering mid-run. |
-| `rolled-back-after-deploy-vm-failure` | `deployVm` rejected outright (`jobstatus=2`) - the most comprehensive rollback demo. **(contest case: a job failed)** |
-| `rolled-back-after-deploy-vm-timeout` | `deployVm` times out on every attempt, exhausting retries before rolling back. **(contest case: a job failed)** |
+| scenario | result | what it shows |
+| --- | --- | --- |
+| `no-public-ip` | positive | Happy path, no public IP branch. **(contest case: `public_ip=false`)** |
+| `with-public-ip` | positive | Happy path, including static NAT on a public IP. **(contest case: `public_ip=true`)** |
+| `multiple-acl-rules-at-once` | positive | Several acl rules are set up at the same time instead of one after another. |
+| `deployvm-outpaces-acl` | positive | `aclList` is deliberately slowed; `deployVm` finishes well before it - proves jobs dispatch independently, not in fixed waves. |
+| `deployvm-timeout-recovery` | positive | `deployVm` times out twice, then succeeds on the third attempt - retry/backoff recovering mid-run. |
+| `deployvm-failure` | negative | `deployVm` rejected outright (`jobstatus=2`) - the most comprehensive rollback demo. **(contest case: a job failed)** |
+| `deployvm-timeout` | negative | `deployVm` times out on every attempt, exhausting retries before rolling back. **(contest case: a job failed)** |
+| `vpc-timeout-recovery-subnet-failure` | negative | `vpc` recovers from a timeout, but `subnet` is then rejected outright (`jobstatus=2`), rolling back the `vpc`. |
